@@ -13,6 +13,7 @@ User.add({
 	password: { type: Types.Password, initial: true, required: true },
 }, 'Permissions', {
 	isAdmin: { type: Boolean, label: 'Can access Keystone', index: true },
+
 });
 
 // Provide access to Keystone
@@ -31,4 +32,4 @@ User.relationship({ ref: 'Post', path: 'posts', refPath: 'author' });
  * Registration
  */
 User.defaultColumns = 'name, email, isAdmin';
-User.register();
+User.register();4

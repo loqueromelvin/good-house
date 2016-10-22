@@ -27,3 +27,9 @@ block content
 					if data.post.image.exists
 						.image-wrap: img(src=data.post._.image.fit(750,450)).img-responsive
 					!= data.post.content.full
+		  	if !data.bible_books
+		  		ul
+				  for book in books
+				    li= book.name
+				  else
+				    li sorry, no books!

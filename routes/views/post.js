@@ -12,11 +12,13 @@ exports = module.exports = function (req, res) {
 	};
 	locals.data = {
 		posts: [],
+		bible_books: [],
+		bible_chapters: [],
+		bible_verses: []
 	};
 
 	// Load the current post
 	view.on('init', function (next) {
-
 		var q = keystone.list('Post').model.findOne({
 			state: 'published',
 			slug: locals.filters.post,
@@ -27,18 +29,92 @@ exports = module.exports = function (req, res) {
 			next(err);
 		});
 
+		console.log('')
+	});
+
+	view.on('init', function(next) {
+		console.log(next)
+		console.log('initializing here')
+		var BIBLES_API_KEY = 'Fkut1itkq0SoIdgOdozhT3HsQcWgUMCex2GGHM5e';
+		var BIBLE_BASE_URL = 'https://bibles.org/v2/';
+		var BOOKS = 'versions/{version}/books.json?include_chapters=true';
+		var CHAPTERS = 'books/{version}:{book}/chapters.json';
+		var VERSES = 'chapters/{version}:{book}.{chapter}/verses.json?include_marginalia=true'
+
+		var dataArr = {};
+		dataArr[BOOKS] = {
+			'version':'eng-GNTD',
+		};
+		dataArr[CHAPTERS] = {
+			'version':'',
+			'book':''
+		};
+		dataArr[VERSES] = {
+			'version':'',
+			'book':'',
+			'chapter':''
+		};
+
+		var fetchData = function(url, data, type) {
+			$.ajax({
+				url: url,
+				beforeSend: function(xhr) {
+	    			xhr.setRequestHeader ("Authorization", "Basic " + btoa(BIBLES_API_KEY + ":X"));
+				},
+				success: function(result) {
+					result = JSON.parse(result);
+					if (type === 'book') locals.data.bible_books.push(result)
+					else if (type === 'chapter') locals.data.bible_chapters.push(result)
+					else if (type === 'verses') locals.data.bible_verses.push(result)
+
+					if (type === 'book' || type === 'chapter') {
+						for (var i in result) {
+							if (type === 'book') {
+								dataUrl = BIBLE_BASE_URL + CHAPTERS;
+								data[type] = result[i]["id"];
+								type = 'chapter';
+								for (var p in data) {
+									dataUrl = dataUrl.replace('{'+p+'}', data[p])
+								}
+								fetchData(dataUrl, data, type)
+							} else if (type === 'chapter') {
+								dataURL = BIBLE_BASE_URL + VERSES;
+								data[type] = result[i]["id"];
+								type = 'verses';
+								for (var p in data) {
+									dataUrl = dataUrl.replace('{'+p+'}', data[p])
+								}
+								fetchData(dataUrl, data, type)
+							}
+						}
+					}
+				},
+				error: function(xhr, status, error) {
+					console.log(xhr)
+					console.log(status)
+					console.log(error)
+				}
+			});
+		}
+
+		var dataUrl = BIBLE_BASE_URL+BOOKS;
+		for (var p in dataArr[BOOKS]) {
+			dataUrl = dataUrl.replace('{'+p+'}', dataArr[BOOKS][p])
+		}
+
+		dataArr[CHAPTERS]["version"] = dataArr[BOOKS]["version"]
+		fetchData(dataUrl, dataArr[CHAPTERS], 'chapter');
 	});
 
 	// Load other posts
 	view.on('init', function (next) {
-
+		console.log('init  api')
 		var q = keystone.list('Post').model.find().where('state', 'published').sort('-publishedDate').populate('author').limit('4');
 
 		q.exec(function (err, results) {
 			locals.data.posts = results;
 			next(err);
 		});
-
 	});
 
 	// Render the view

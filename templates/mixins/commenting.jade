@@ -1,0 +1,10 @@
+mixin comment-form(action)
+    form(method='post').comment-form
+        input(type='hidden', name='action', value='comment.create')
+    ...
+mixin comment-post(comment)
+    if comment.author
+        ...
+        if user && user.id == comment.author.id
+            |  &middot;         
+            a(href='?remove=comment&comment=' + comment.id, title='Delete this comment', rel='tooltip', data-placement='left').comment-delete.js-delete-confirm Delete

@@ -22,6 +22,25 @@ mixin post(post)
 		if post.content.extended
 			p.read-more: a(href='/blog/post/' + post.slug) Read more...
 
+		p.lead.text-muted Comments
+			ul
+				for comment in post.comments
+					li= comment.name
+				else
+					li sorry, no comments!
+
+		comment-form('get')
+
+mixin comment-form(action)
+	form(method='post').comment-form
+	input(type='text' name='action', value='comment.create')
+
+mixin comment-post(comment)
+	if comment.author
+		if user && user.id == comment.author.id
+			|  &middot;
+			a(href='?remove=comment&comment=' + comment.id, title='Delete this comment', rel='tooltip', data-placement='left').comment-delete.js-delete-confirm Delete
+
 block intro
 	.container
 		h1= data.category ? data.category.name : 'Blog'

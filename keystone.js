@@ -25,6 +25,7 @@ keystone.init({
 	'session': true,
 	'auth': true,
 	'user model': 'User',
+	'logger': 'combined'
 });
 
 // Load your project's Models
